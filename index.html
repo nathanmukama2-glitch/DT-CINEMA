@@ -52,10 +52,24 @@
         <p>Total in Bank: <span id="bank-total">0</span> UGX</p>
         <button type="button" onclick="fetchBalances()" style="background: #007bff; margin-top: 5px; font-size: 12px; padding: 5px;">Refresh Balances</button>
     </div>
+    <div style="margin-top: 20px;">
+    <h3>Business Reports</h3>
+    <table id="monthlyTable" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+        <thead>
+            <tr style="background: #eee; text-align: left;">
+                <th style="padding: 8px; border-bottom: 2px solid #ccc;">Month</th>
+                <th style="padding: 8px; border-bottom: 2px solid #ccc;">Income</th>
+                <th style="padding: 8px; border-bottom: 2px solid #ccc;">Net Profit</th>
+            </tr>
+        </thead>
+        <tbody id="report-body">
+            </tbody>
+    </table>
+</div>
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyMA2z9ybyVmA_oZ_Cs8vFF3P4wbgvzOiMt-KMy77IZHsm_L0BId_JkMJ0Sh1c2Wmzsiw/exec'; 
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzYAKLFqlI3qLt0-CI9O8If5UvIXW0_qhtg-hzoUwBs21q_uTmuS_6xs5pw3o94sD1mMQ/exec'; 
     const form = document.getElementById('transactionForm');
 
     form.addEventListener('submit', e => {
@@ -76,26 +90,30 @@
             });
     });
 
-    function fetchBalances() {
-        fetch(scriptURL + "?action=getTotals")
-            .then(res => res.json())
-            .then(data => {
-                const cashDisplay = document.getElementById('balance-display');
-                const cashAmount = data.cash || 0;
-                const bankAmount = data.bank || 0;
+   function fetchBalances() {
+    fetch(scriptURL + "?action=getTotals")
+        .then(res => res.json())
+        .then(data => {
+            // 1. Update Main Balances
+            document.getElementById('cash-hand').innerText = (data.cash || 0).toLocaleString();
+            document.getElementById('bank-total').innerText = (data.bank || 0).toLocaleString();
 
-                document.getElementById('cash-hand').innerText = cashAmount.toLocaleString();
-                document.getElementById('bank-total').innerText = bankAmount.toLocaleString();
+            // 2. Build Monthly Table
+            const reportBody = document.getElementById('report-body');
+            reportBody.innerHTML = ""; // Clear old data
 
-                if (cashAmount < 70000) {
-                    cashDisplay.classList.add('warning');
-                    document.getElementById('status').innerText = "⚠️ Alert: Low Cash for 22nd!";
-                } else {
-                    cashDisplay.classList.remove('warning');
-                }
-            })
-            .catch(err => console.log("First record needed..."));
-    }
+            for (const month in data.history) {
+                const row = `<tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${month}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${data.history[month].income.toLocaleString()}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold; color: green;">
+                        ${data.history[month].profit.toLocaleString()}
+                    </td>
+                </tr>`;
+                reportBody.insertAdjacentHTML('beforeend', row);
+            }
+        });
+}
     // This makes the app load the totals automatically on startup
 window.onload = function() {
     fetchBalances();
