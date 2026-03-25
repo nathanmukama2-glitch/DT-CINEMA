@@ -1,0 +1,104 @@
+# DT-CINEMA
+DT SAVINGS
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DT Cinema Tracker</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f9; padding: 20px; }
+        .container { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px-8px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input, select, button { width: 100%; padding: 12px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
+        button { background: #28a745; color: white; border: none; font-size: 16px; margin-top: 20px; cursor: pointer; }
+        button:hover { background: #218838; }
+        .summary { margin-top: 20px; padding: 10px; background: #e9ecef; border-radius: 5px; }
+      .warning { background: #dc3545 !important; color: white !important; animation: blink 1s infinite; }
+@keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>DT Cinema Manager</h2>
+    
+    <form id="transactionForm">
+        <label>Date</label>
+        <input type="date" id="date" required>
+
+        <label>Transaction Type</label>
+        <select id="type">
+            <option value="Income">Daily Income</option>
+            <option value="Salary">Staff Salary (Fixed)</option>
+            <option value="Rent">Rent (Fixed)</option>
+            <option value="Fuel">Fuel</option>
+            <option value="Data">Leica Data</option>
+            <option value="Movies">New Movies</option>
+            <option value="Bank">Bank Deposit (Profit)</option>
+            <option value="Other">Other Expense</option>
+        </select>
+
+        <label>Amount (UGX)</label>
+        <input type="number" id="amount" placeholder="Enter amount" required>
+
+        <label>Notes</label>
+        <input type="text" id="notes" placeholder="e.g., Bought Action movies">
+
+        <button type="submit">Save Transaction</button>
+    </form>
+
+    <div class="summary" id="status">Ready to log...</div>
+</div>
+
+<div id="balance-display" style="background: #333; color: #fff; padding: 15px; border-radius: 5px; margin-top: 20px;">
+    <p>Cash on Hand: <span id="cash-hand">0</span> UGX</p>
+    <p>Total in Bank: <span id="bank-total">0</span> UGX</p>
+    <button onclick="fetchBalances()" style="background: #007bff; margin-top: 5px;">Update Balances</button>
+</div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzQh66TCfFXVg6-QXG_FWTMbhFF2TrItJBvRLIBXcxMre8LuU1yj-zI89UaP2NMFszSKw/exec';
+    const form = document.getElementById('transactionForm');
+
+    // Function to save data
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        document.getElementById('status').innerText = "Saving...";
+        
+        fetch(scriptURL, { method: 'POST', body: new FormData(form)})
+            .then(response => {
+                document.getElementById('status').innerText = "Transaction Saved!";
+                form.reset();
+                fetchBalances(); // Refresh numbers after saving
+            })
+            .catch(error => {
+                document.getElementById('status').innerText = "Error! Try again.";
+            });
+    });
+
+   function fetchBalances() {
+    fetch(scriptURL + "?action=getTotals")
+        .then(res => res.json())
+        .then(data => {
+            const cashDisplay = document.getElementById('balance-display');
+            const cashAmount = data.cash;
+
+            document.getElementById('cash-hand').innerText = cashAmount.toLocaleString();
+            document.getElementById('bank-total').innerText = data.bank.toLocaleString();
+
+            // Alert Logic: If cash is less than 70,000 UGX
+            if (cashAmount < 70000) {
+                cashDisplay.classList.add('warning');
+                document.getElementById('status').innerText = "⚠️ Low Funds for 22nd Payments!";
+            } else {
+                cashDisplay.classList.remove('warning');
+                document.getElementById('status').innerText = "Funds are healthy.";
+            }
+        });
+}
+</script>
+
+</body>
+</html>
