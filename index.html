@@ -78,25 +78,26 @@ DT SAVINGS
             });
     });
 
-   function fetchBalances() {
+  function fetchBalances() {
     fetch(scriptURL + "?action=getTotals")
         .then(res => res.json())
         .then(data => {
             const cashDisplay = document.getElementById('balance-display');
-            const cashAmount = data.cash;
+            
+            // This '|| 0' ensures that if the data is empty, we use 0 instead of crashing
+            const cashAmount = data.cash || 0;
+            const bankAmount = data.bank || 0;
 
             document.getElementById('cash-hand').innerText = cashAmount.toLocaleString();
-            document.getElementById('bank-total').innerText = data.bank.toLocaleString();
+            document.getElementById('bank-total').innerText = bankAmount.toLocaleString();
 
-            // Alert Logic: If cash is less than 70,000 UGX
             if (cashAmount < 70000) {
                 cashDisplay.classList.add('warning');
-                document.getElementById('status').innerText = "⚠️ Low Funds for 22nd Payments!";
             } else {
                 cashDisplay.classList.remove('warning');
-                document.getElementById('status').innerText = "Funds are healthy.";
             }
-        });
+        })
+        .catch(error => console.log("Waiting for initial data..."));
 }
 </script>
 
