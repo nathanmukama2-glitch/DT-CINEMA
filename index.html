@@ -55,7 +55,7 @@
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbweBrxPOWUfuNv-Juqf5L8FbJ-W6asUmy5yprObIWbxBwUxrSbBCiiGeT0TWfY6zUMo/exec'; 
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyMA2z9ybyVmA_oZ_Cs8vFF3P4wbgvzOiMt-KMy77IZHsm_L0BId_JkMJ0Sh1c2Wmzsiw/exec'; 
     const form = document.getElementById('transactionForm');
 
     form.addEventListener('submit', e => {
@@ -96,6 +96,10 @@
             })
             .catch(err => console.log("First record needed..."));
     }
+    // This makes the app load the totals automatically on startup
+window.onload = function() {
+    fetchBalances();
+};
 </script>
 
 </body>
