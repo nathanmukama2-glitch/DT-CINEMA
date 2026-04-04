@@ -6,14 +6,18 @@
     <title>DT Cinema Tracker</title>
     <style>
         body { font-family: sans-serif; background: #f4f4f9; padding: 20px; }
-        .container { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; }
-        label { display: block; margin-top: 10px; font-weight: bold; }
+        .container { max-width: 450px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2, h3 { text-align: center; color: #333; margin-bottom: 15px; }
+        label { display: block; margin-top: 10px; font-weight: bold; font-size: 14px; }
         input, select, button { width: 100%; padding: 12px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
-        button { background: #28a745; color: white; border: none; font-size: 16px; margin-top: 20px; cursor: pointer; }
-        .summary { margin-top: 20px; padding: 15px; background: #333; color: white; border-radius: 5px; }
-        .warning { background: #dc3545 !important; border: 2px solid yellow; }
-        #status { margin-top: 10px; font-weight: bold; text-align: center; color: #555; }
+        button { background: #28a745; color: white; border: none; font-size: 16px; margin-top: 15px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #218838; }
+        .summary { margin-top: 20px; padding: 15px; background: #333; color: white; border-radius: 5px; text-align: center; }
+        .summary p { margin: 5px 0; font-size: 18px; }
+        .section { border-top: 2px solid #eee; margin-top: 25px; padding-top: 15px; }
+        #status { margin-top: 10px; font-weight: bold; text-align: center; color: #007bff; min-height: 20px; }
+        .bank-btn { background: #6f42c1; }
+        .startup-btn { background: #17a2b8; }
     </style>
 </head>
 <body>
@@ -21,11 +25,14 @@
 <div class="container">
     <h2>DT Cinema Manager</h2>
     
-    <form id="transactionForm">
-        <label>Date</label>
-        <input type="date" name="date" required>
+    <div id="status">Ready...</div>
 
-        <label>Transaction Type</label>
+    <form id="transactionForm">
+        <h3>Daily Transactions</h3>
+        <label>Date</label>
+        <input type="date" name="date" id="tDate" required>
+
+        <label>Type</label>
         <select name="type">
             <option value="Income">Daily Income</option>
             <option value="Salary">Staff Salary (50k)</option>
@@ -33,91 +40,120 @@
             <option value="Fuel">Fuel</option>
             <option value="Data">Leica Data</option>
             <option value="Movies">New Movies</option>
-            <option value="Bank">Bank Deposit</option>
+            <option value="Other">Other Expense</option>
         </select>
 
         <label>Amount (UGX)</label>
-        <input type="number" name="amount" placeholder="e.g. 5000" required>
+        <input type="number" name="amount" placeholder="Enter amount" required>
 
         <label>Notes</label>
         <input type="text" name="notes" placeholder="Details...">
 
-        <button type="submit" id="submitBtn">Save Transaction</button>
+        <button type="submit">Save Transaction</button>
     </form>
 
-    <div id="status">Ready...</div>
+    <div class="section">
+        <form id="bankForm">
+            <h3>Bank Savings</h3>
+            <label>Amount to Save (UGX)</label>
+            <input type="number" name="amount" placeholder="Deposit to Bank" required>
+            <button type="submit" class="bank-btn">Deposit to Bank</button>
+        </form>
+    </div>
 
     <div class="summary" id="balance-display">
         <p>Cash on Hand: <span id="cash-hand">0</span> UGX</p>
         <p>Total in Bank: <span id="bank-total">0</span> UGX</p>
-        <button type="button" onclick="fetchBalances()" style="background: #007bff; margin-top: 5px; font-size: 12px; padding: 5px;">Refresh Balances</button>
+        <button type="button" onclick="fetchBalances()" style="background: #444; margin-top: 10px; font-size: 12px; padding: 8px;">Update Balances</button>
     </div>
-    <div style="margin-top: 20px;">
-    <h3>Business Reports</h3>
-    <table id="monthlyTable" style="width: 100%; border-collapse: collapse; font-size: 14px;">
-        <thead>
-            <tr style="background: #eee; text-align: left;">
-                <th style="padding: 8px; border-bottom: 2px solid #ccc;">Month</th>
-                <th style="padding: 8px; border-bottom: 2px solid #ccc;">Income</th>
-                <th style="padding: 8px; border-bottom: 2px solid #ccc;">Net Profit</th>
-            </tr>
-        </thead>
-        <tbody id="report-body">
-            </tbody>
-    </table>
-</div>
+
+    <div class="section">
+        <h3>Startup Assets</h3>
+        <form id="startupForm">
+            <label>Item Name</label>
+            <input type="text" name="itemName" placeholder="e.g. Cinema Chairs" required>
+            <label>Value (UGX)</label>
+            <input type="number" name="itemValue" placeholder="Cost of item" required>
+            <button type="submit" class="startup-btn">Record Startup Item</button>
+        </form>
+    </div>
+
+    <div class="section">
+        <h3>Monthly Reports</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+                <tr style="background: #eee; text-align: left;">
+                    <th style="padding: 8px; border-bottom: 2px solid #ccc;">Month</th>
+                    <th style="padding: 8px; border-bottom: 2px solid #ccc;">Income</th>
+                    <th style="padding: 8px; border-bottom: 2px solid #ccc;">Profit</th>
+                </tr>
+            </thead>
+            <tbody id="report-body"></tbody>
+        </table>
+    </div>
 </div>
 
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzYAKLFqlI3qLt0-CI9O8If5UvIXW0_qhtg-hzoUwBs21q_uTmuS_6xs5pw3o94sD1mMQ/exec'; 
-    const form = document.getElementById('transactionForm');
+    
+    // Auto-set today's date
+    document.getElementById('tDate').valueAsDate = new Date();
 
-    form.addEventListener('submit', e => {
-        e.preventDefault();
-        document.getElementById('status').innerText = "Saving to Google Sheets...";
-        document.getElementById('submitBtn').disabled = true;
-        
-        fetch(scriptURL, { method: 'POST', body: new FormData(form)})
-            .then(response => {
-                document.getElementById('status').innerText = "✅ Saved Successfully!";
-                document.getElementById('submitBtn').disabled = false;
-                form.reset();
+    // Universal Submit Function
+    function submitData(formElement, actionName, successText) {
+        document.getElementById('status').innerText = "Processing...";
+        const formData = new FormData(formElement);
+        formData.append('action', actionName);
+
+        fetch(scriptURL, { method: 'POST', body: formData })
+            .then(res => {
+                document.getElementById('status').innerText = "✅ " + successText;
+                formElement.reset();
+                document.getElementById('tDate').valueAsDate = new Date();
                 fetchBalances();
             })
-            .catch(error => {
-                document.getElementById('status').innerText = "❌ Error: Connection Failed";
-                document.getElementById('submitBtn').disabled = false;
+            .catch(err => {
+                document.getElementById('status').innerText = "❌ Error saving data";
             });
+    }
+
+    // Form Listeners
+    document.getElementById('transactionForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitData(this, 'saveTransaction', 'Transaction Saved!');
     });
 
-   function fetchBalances() {
-    fetch(scriptURL + "?action=getTotals")
-        .then(res => res.json())
-        .then(data => {
-            // 1. Update Main Balances
-            document.getElementById('cash-hand').innerText = (data.cash || 0).toLocaleString();
-            document.getElementById('bank-total').innerText = (data.bank || 0).toLocaleString();
+    document.getElementById('bankForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitData(this, 'saveBank', 'Bank Deposit Recorded!');
+    });
 
-            // 2. Build Monthly Table
-            const reportBody = document.getElementById('report-body');
-            reportBody.innerHTML = ""; // Clear old data
+    document.getElementById('startupForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitData(this, 'saveStartup', 'Asset Added!');
+    });
 
-            for (const month in data.history) {
-                const row = `<tr>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${month}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${data.history[month].income.toLocaleString()}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold; color: green;">
-                        ${data.history[month].profit.toLocaleString()}
-                    </td>
-                </tr>`;
-                reportBody.insertAdjacentHTML('beforeend', row);
-            }
-        });
-}
-    // This makes the app load the totals automatically on startup
-window.onload = function() {
-    fetchBalances();
-};
+    function fetchBalances() {
+        fetch(scriptURL + "?action=getTotals")
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('cash-hand').innerText = (data.cash || 0).toLocaleString();
+                document.getElementById('bank-total').innerText = (data.bank || 0).toLocaleString();
+
+                const reportBody = document.getElementById('report-body');
+                reportBody.innerHTML = ""; 
+                for (const month in data.history) {
+                    const row = `<tr>
+                        <td style="padding: 8px; border-bottom: 1px solid #ddd;">${month}</td>
+                        <td style="padding: 8px; border-bottom: 1px solid #ddd;">${data.history[month].income.toLocaleString()}</td>
+                        <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold; color: green;">${data.history[month].profit.toLocaleString()}</td>
+                    </tr>`;
+                    reportBody.insertAdjacentHTML('beforeend', row);
+                }
+            });
+    }
+
+    window.onload = fetchBalances;
 </script>
 
 </body>
